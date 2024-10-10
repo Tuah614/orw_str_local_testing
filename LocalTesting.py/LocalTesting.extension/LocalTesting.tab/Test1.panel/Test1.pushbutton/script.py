@@ -9,7 +9,10 @@ from pyrevit import revit, forms
 from collections import OrderedDict
 import json
 
-#༼ つ ◕_◕ ༽つ CONSTANTS ༼ つ ◕_◕ ༽つ#
+# ╔═╗╔═╗╔╗╔╔═╗╔╦╗╔═╗╔╗╔╔╦╗╔═╗
+# ║  ║ ║║║║╚═╗ ║ ╠═╣║║║ ║ ╚═╗
+# ╚═╝╚═╝╝╚╝╚═╝ ╩ ╩ ╩╝╚╝ ╩ ╚═╝ CONSTANTS
+# ==================================================
 
 PANELTYPEPARAMETERNAME = "ACM_DWALL_Panel Type"
 DWALLLENGTHPARAM = BuiltInParameter.STRUCTURAL_FOUNDATION_LENGTH
