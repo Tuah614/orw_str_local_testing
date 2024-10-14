@@ -1,0 +1,11 @@
+title: |-
+    Generate
+    Coupler Schedule
+tooltip: |-
+    Generate coupler schedule by selecting a viewport and JSON schema
+
+    Change log:
+    - Terminate program if no JSON location in memory
+    - Terminate program if JSON keys not matching with model panel types
+author: Tuah Hamid - AECOM
+highlight: updated

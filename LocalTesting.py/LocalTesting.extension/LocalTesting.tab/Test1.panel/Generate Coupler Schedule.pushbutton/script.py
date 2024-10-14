@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__title__ = "Generate Coupler Schedule" 
+__title__ = "Generate Coupler Schedule v1.1.0" 
 __author__ = "Tuah Hamid  - AECOM KL" 
 __helpurl__ = "https://teams.microsoft.com/l/chat/0/0?users=tuah.hamid@aecom.com"
 
@@ -8,6 +8,8 @@ from Autodesk.Revit.UI.Selection import *
 from pyrevit import revit, forms
 from collections import OrderedDict
 import json
+import os
+from pathlib import Path
 
 # ╔═╗╔═╗╔╗╔╔═╗╔╦╗╔═╗╔╗╔╔╦╗╔═╗
 # ║  ║ ║║║║╚═╗ ║ ╠═╣║║║ ║ ╚═╗
@@ -18,7 +20,7 @@ PANELTYPEPARAMETERNAME = "ACM_DWALL_Panel Type"
 DWALLLENGTHPARAM = BuiltInParameter.STRUCTURAL_FOUNDATION_LENGTH
 LEVELNAMEFAMNAME = "ACM_DET_Level Names"
 LN1 = "Levels"
-REBARLAYERFAMNAME = "ACN_DET_Rebar Layer"
+REBARLAYERFAMNAME = "ACM_DET_Rebar Layer"
 RL1 = "1 - One Row"
 RL2 = "2 - Two Row"
 RL3 = "3 - Three Row"
@@ -128,11 +130,27 @@ def get_elements_by_category_from_view(doc, category, view_id):
                 .ToElements()
     return collector
 
-# ===============================================================================
-# ✅   CHECK IF FAMILY IS LOADED IN PROJECT
-# ===============================================================================
+def sort_panel_types(p_type):
+    alpha = p_type[0]
+    numeric = int(p_type[1:])
+    return(alpha, numeric)
 
-#check for required family exist in the project
+def get_appdata_dir():
+    dir = os.getenv('APPDATA')
+    return dir
+
+def get_saved_schema_path():
+    appdata_dir = get_appdata_dir() 
+    orw_str_dir = Path(appdata_dir) / 'orw_str'
+    json_file_path = orw_str_dir / 'schema_directory.json'
+    return str(json_file_path)
+
+# ╔═╗╔═╗╔╦╗╔═╗
+# ║ ╦╠═╣ ║ ║╣ 
+# ╚═╝╩ ╩ ╩ ╚═╝ GATE
+# ==================================================
+
+# ✅ check for required family exist in the project
 family_type_collector = FilteredElementCollector(doc)\
                         .OfCategory(BuiltInCategory.OST_GenericAnnotation)\
                         .OfClass(FamilySymbol)\
@@ -160,7 +178,69 @@ if missing_types:
     alert_message = forms.alert("Please ensure required families are loaded in the project\
                                 Author: Tuah Hamid",
                                 exitscript=True)
+    
 
+# ✅ COMPARE JSON KEYS WITH UNIQUE PANEL TYPES IN MODEL
+# get model unique panel types
+str_found_collector = FilteredElementCollector(doc)\
+                        .OfCategory(BuiltInCategory.OST_StructuralFoundation)\
+                        .WhereElementIsNotElementType()\
+                        .ToElements()
+panel_set = set()
+for ele in str_found_collector:
+    param_value = ele.LookupParameter("ACM_DWALL_Panel Type").AsString() 
+    if param_value is not None:
+        panel_set.add(param_value)
+sorted_by_numeric = sorted(panel_set, key=sort_panel_types)
+
+# get json schema directory
+# get panel types as main keys
+schema_path = get_saved_schema_path()
+with open(schema_path, 'r') as local_path:
+    try:
+        directory_data = json.load(local_path)
+        source_file = directory_data['directory']
+        # print(source_file)
+    except:
+        forms.alert("JSON schema not found in user's machine\
+                    Ensure JSON path is specified\
+                    Author: Tuah Hamid",
+                    exitscript=True)
+        
+# load panel type schema
+with open(source_file, 'r') as schema:
+    try:
+        schema_data_ordered = json.load(schema, object_pairs_hook=OrderedDict)
+        schema_data_standard = dict(schema_data_ordered)
+    except:
+        forms.alert("Failed to load JSON schema\
+                    Ensure schema is in the correct format\
+                    Author: Tuah Hamid",
+                    exitscript=True)
+        
+# compare json keys with model unique panel types
+schema_keys = sorted(schema_data_standard.keys(), key=sort_panel_types)
+for typ in sorted_by_numeric:
+    if typ not in schema_keys:
+        forms.alert("Missing types either in model or in json schema\
+                    Ensure panel types exist in both model and json schema\
+                    Author: Tuah Hamid",
+                    exitscript=True)
+
+        
+# count level occurences in each panel type, terminate if more than one unique values
+panel_data_as_list = schema_data_ordered.values()
+panel_data_counts = []
+for panel in panel_data_as_list:
+    panel_data_counts.append(len(panel))
+
+panel_unique_counts_set = list(set(panel_data_counts))
+panel_unique_count = len(panel_unique_counts_set)
+
+if panel_unique_count != 1:
+    forms.alert("Count error in levels", exitscript=True)
+else:
+    LEVELCOUNT = panel_unique_counts_set[0]
 
 # ╔╦╗╔═╗╦╔╗╔
 # ║║║╠═╣║║║║
@@ -174,9 +254,7 @@ elements = get_elements_by_category_from_view(doc,
                                               selected_viewport.ViewId)
 
 # generate dwall mark and dwall element mapping
-
 valid_dwall = {}
-
 for e in elements:
     param = e.get_Parameter(BuiltInParameter.ALL_MODEL_MARK).AsString()
     if param is not None:
@@ -186,7 +264,6 @@ for e in elements:
             pass
 
 #filter dwall based on user selection
-
 res = forms.SelectFromList.show(sorted(valid_dwall.keys()), 
                                 multiselect=True, 
                                 button_name='Select Type')
@@ -197,9 +274,7 @@ for key in res:
         selected_dwall[key] = valid_dwall[key]
 
 # refine dwall data by adding length and panel type values NOTEz that panel type parameter may varies from project
-
 selected_dwall_info = {}
-
 for key, dwall in selected_dwall.items():
     length_param = get_builtin_param(dwall, DWALLLENGTHPARAM)
     panel_type_param = get_shared_param(dwall, PANELTYPEPARAMETERNAME)
@@ -214,29 +289,6 @@ for key, dwall in selected_dwall.items():
         panel_type_value = panel_type_param.AsString()
 
     selected_dwall_info[key] = [dwall, length_value, panel_type_value]
-
-# ===============================================================================
-# 👓   PROMPT JSON FILE
-# ===============================================================================
-
-source_file = forms.pick_file(file_ext='json')
-with open(source_file, 'r') as schema:
-    schema_data_ordered = json.load(schema, object_pairs_hook=OrderedDict)
-schema_data_standard = dict(schema_data_ordered)
-
-# count level occurences in each panel type, terminate if more than one unique values
-panel_data_as_list = schema_data_ordered.values()
-panel_data_counts = []
-for panel in panel_data_as_list:
-    panel_data_counts.append(len(panel))
-
-panel_unique_counts_set = list(set(panel_data_counts))
-panel_unique_count = len(panel_unique_counts_set)
-
-if panel_unique_count != 1:
-    forms.alert("Count error in levels", exitscript=True)
-else:
-    LEVELCOUNT = panel_unique_counts_set[0]
 
 # ===============================================================================
 # GENERATE BOOLEANS FOR HEADER VISIBILITY, LEVEL NAMES, LAYER NAMES, LAYER VALUES

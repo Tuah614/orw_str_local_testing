@@ -5,3 +5,5 @@ layout:
   - ReadJSON
   - GenerateLPoints
   - GetUniquePanelTypes
+  - UpdateLayerValues
+  - SpecifyPath
