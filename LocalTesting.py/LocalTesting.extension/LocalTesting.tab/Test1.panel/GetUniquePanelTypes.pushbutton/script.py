@@ -23,9 +23,20 @@ selection = uidoc.Selection #type: Selection
 # ==================================================
 
 def sort_panel_types(p_type):
-    alpha = p_type[0]
-    numeric = int(p_type[1:])
-    return(alpha, numeric)
+    if len(p_type) == 1:
+        alpha = p_type[0]
+        numeric1 = p_type[0]
+        numeric2 = p_type[0]
+    else:
+        if p_type[0].isalpha():
+            alpha = p_type[0]
+            numeric1 = int(p_type[1])
+            numeric2 = None
+        else:
+            alpha = p_type[0]
+            numeric1 = int(p_type[0])
+            numeric2 = p_type[0]
+    return(alpha, numeric1, numeric2)
 
 # ╔╦╗╔═╗╦╔╗╔
 # ║║║╠═╣║║║║
