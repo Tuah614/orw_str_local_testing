@@ -4,6 +4,7 @@
 from Autodesk.Revit.DB import *
 from Autodesk.Revit.ApplicationServices import Application
 from Autodesk.Revit.UI import UIDocument
+from typing import List
 
 # variables
 doc = __revit__.ActiveUIDocument.Document #type: Document
@@ -15,29 +16,29 @@ app = __revit__.Application #type: Application
 # ╩ ╩╩ ╩╩╝╚╝
 # ==================================================
 
-def get_all_generic_annotation_symbols():
+def get_all_generic_annotation_symbols() -> List[FamilySymbol]:
     '''Generic annotation collector'''
-    annotion_symbol_collector = FilteredElementCollector(doc).\
+    annotation_symbol_collector = FilteredElementCollector(doc).\
                             OfCategory(BuiltInCategory.OST_GenericAnnotation).\
                             OfClass(FamilySymbol).\
-                            ToElements()  # type: AnnotationSymbolType
-    return annotion_symbol_collector
+                            ToElements() 
+    return annotation_symbol_collector
 
-def get_annotation_symbol_by_names(family_names):
+def get_annotation_symbol_by_names(family_names: List[str]) -> List[Element]:
     '''Generic annotation collector, filtered by names'''
-    annotion_symbol_collector = FilteredElementCollector(doc).\
+    annotation_symbol_collector = FilteredElementCollector(doc).\
                                 OfCategory(BuiltInCategory.OST_GenericAnnotation).\
                                 OfClass(FamilySymbol).\
-                                ToElements() #AnnotationSymbolType
+                                ToElements() #type: List[FamilySymbol]
     valid_family = []
-    for symbol in annotion_symbol_collector:
+    for symbol in annotation_symbol_collector:
         fam_name = symbol.FamilyName
         for n in family_names:
             if n == fam_name:
                 valid_family.append(symbol)
     return  valid_family
 
-def family_exist_by_names(collected_family, family_names):
+def family_exist_by_names(collected_family: List[FamilySymbol], family_names: List[str]):
     '''Check if the family names exists in the family collector'''
     collected_family_names = []
     checks = []
