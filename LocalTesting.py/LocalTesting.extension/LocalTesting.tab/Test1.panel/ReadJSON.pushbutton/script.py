@@ -9,8 +9,6 @@ from pathlib import Path
 import json
 import os
 
-#this do this ayadada
-
 # ╔═╗╦ ╦╔╗╔╔═╗╔╦╗╦╔═╗╔╗╔╔═╗
 # ╠╣ ║ ║║║║║   ║ ║║ ║║║║╚═╗
 # ╚  ╚═╝╝╚╝╚═╝ ╩ ╩╚═╝╝╚╝╚═╝ FUNCTIONS
@@ -36,10 +34,10 @@ def get_saved_schema_path():
 #  ╚╝ ╩ ╩╩╚═╩╩ ╩╚═╝╩═╝╚═╝╚═╝ VARIABLES
 # ==================================================
 
-doc = __revit__.ActiveUIDocument.Document
-uidoc = __revit__.ActiveUIDocument
-app = __revit__.Application
-selection = uidoc.Selection
+doc = __revit__.ActiveUIDocument.Document #Type: Document
+uidoc = __revit__.ActiveUIDocument #Type: UIDocument
+app = __revit__.Application #Type: Application
+selection = uidoc.Selection #Type: Selection
 
 # ╔╦╗╔═╗╦╔╗╔
 # ║║║╠═╣║║║║

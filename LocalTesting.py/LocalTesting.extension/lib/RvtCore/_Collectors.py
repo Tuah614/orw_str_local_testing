@@ -4,7 +4,7 @@
 from Autodesk.Revit.DB import *
 from Autodesk.Revit.ApplicationServices import Application
 from Autodesk.Revit.UI import UIDocument
-from typing import List
+from typing import List, Tuple
 
 # variables
 doc = __revit__.ActiveUIDocument.Document #type: Document
@@ -16,7 +16,7 @@ app = __revit__.Application #type: Application
 # ╩ ╩╩ ╩╩╝╚╝
 # ==================================================
 
-def get_all_generic_annotation_symbols() -> List[FamilySymbol]:
+def get_all_generic_annotation_symbols(doc): # type: (Document) -> List[Element]
     '''Generic annotation collector'''
     annotation_symbol_collector = FilteredElementCollector(doc).\
                             OfCategory(BuiltInCategory.OST_GenericAnnotation).\
@@ -24,12 +24,12 @@ def get_all_generic_annotation_symbols() -> List[FamilySymbol]:
                             ToElements() 
     return annotation_symbol_collector
 
-def get_annotation_symbol_by_names(family_names: List[str]) -> List[Element]:
+def get_annotation_symbol_by_names(family_names): # type: (List[str]) -> List[Element]
     '''Generic annotation collector, filtered by names'''
     annotation_symbol_collector = FilteredElementCollector(doc).\
                                 OfCategory(BuiltInCategory.OST_GenericAnnotation).\
                                 OfClass(FamilySymbol).\
-                                ToElements() #type: List[FamilySymbol]
+                                ToElements() # type: List[FamilySymbol]
     valid_family = []
     for symbol in annotation_symbol_collector:
         fam_name = symbol.FamilyName
@@ -38,7 +38,7 @@ def get_annotation_symbol_by_names(family_names: List[str]) -> List[Element]:
                 valid_family.append(symbol)
     return  valid_family
 
-def family_exist_by_names(collected_family: List[FamilySymbol], family_names: List[str]):
+def family_exist_by_names(collected_family, family_names): # type: (List[FamilySymbol], List[str]) -> List[Element]
     '''Check if the family names exists in the family collector'''
     collected_family_names = []
     checks = []
@@ -55,8 +55,8 @@ def family_exist_by_names(collected_family: List[FamilySymbol], family_names: Li
     res = all(checks)
     return res, missing_names
 
-def get_elements_by_category_from_view(doc, category, view_id):
-    from Autodesk.Revit.DB import FilteredElementCollector
+def get_elements_by_category_from_view(doc, category, view_id): # type: (Document, BuiltInCategory, ElementId) -> List[Element]
+    '''Get elements by category given a view'''
     collector = FilteredElementCollector(doc, view_id)\
                 .OfCategory(category)\
                 .WhereElementIsNotElementType()\

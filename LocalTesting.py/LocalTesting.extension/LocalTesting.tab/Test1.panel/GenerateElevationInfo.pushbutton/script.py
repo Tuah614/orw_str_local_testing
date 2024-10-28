@@ -36,7 +36,7 @@ selection = uidoc.Selection #type: Selection
 # ==================================================
 
 #check if the require families exist in the current document
-all_generic_annotations = _Collectors.get_all_generic_annotation_symbols()
+all_generic_annotations = _Collectors.get_all_generic_annotation_symbols(doc)
 family_is_exist, missing_families = _Collectors.family_exist_by_names(all_generic_annotations, REQUIRED_FAMILY_NAMES)
 if not family_is_exist:
     missing_family_termination = forms.alert("Missing families: {}".format(str.join(", ", missing_families)),

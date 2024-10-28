@@ -15,12 +15,12 @@ app = __revit__.Application #type: Application
 # ╩ ╩╩ ╩╩╝╚╝
 # ==================================================
 
-def convert_internal_to_millimeter(internal_unit_value):
+def convert_internal_to_millimeter(internal_unit_value): # type: (float) -> float
     '''Convert internal ft to mm'''
     converted_unit = UnitUtils.ConvertFromInternalUnits(internal_unit_value, UnitTypeId.Millimeters)
     return converted_unit
 
-def convert_millimeter_to_internal(project_unit_value):
+def convert_millimeter_to_internal(project_unit_value): # type: (float) -> float
     '''Convert mm to internal ft'''
     converted_unit = UnitUtils.ConvertToInternalUnits(project_unit_value, UnitTypeId.Millimeters)
     return converted_unit
