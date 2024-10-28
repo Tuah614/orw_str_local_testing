@@ -4,7 +4,7 @@
 from Autodesk.Revit.DB import *
 from Autodesk.Revit.ApplicationServices import Application
 from Autodesk.Revit.UI import UIDocument
-from typing import List, Tuple
+# from typing import List, Tuple
 
 # variables
 doc = __revit__.ActiveUIDocument.Document #type: Document
@@ -56,9 +56,19 @@ def family_exist_by_names(collected_family, family_names): # type: (List[FamilyS
     return res, missing_names
 
 def get_elements_by_category_from_view(doc, category, view_id): # type: (Document, BuiltInCategory, ElementId) -> List[Element]
+
     '''Get elements by category given a view'''
     collector = FilteredElementCollector(doc, view_id)\
                 .OfCategory(category)\
                 .WhereElementIsNotElementType()\
                 .ToElements()
     return collector
+
+def get_family_by_names(doc, family_names): # type: (Document, List[str]) -> List[Family]
+    '''Family collector by names'''
+    family_collector = FilteredElementCollector(doc).OfClass(Family).ToElements() # type: List[Family]
+    valid_family = []
+    for family in family_collector:
+        if family.Name in family_names:
+            valid_family.append(family)
+    return valid_family

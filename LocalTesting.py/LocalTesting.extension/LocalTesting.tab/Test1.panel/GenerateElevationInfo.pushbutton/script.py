@@ -46,3 +46,54 @@ if not family_is_exist:
 # ║║║╠═╣║║║║
 # ╩ ╩╩ ╩╩╝╚╝ MAIN
 # ==================================================
+
+# get dwall from selected viewport
+selected_viewport = _Selections.pick_single_element(doc, uidoc)
+dwalls_in_view = _Collectors.get_elements_by_category_from_view(doc, 
+                                                                BuiltInCategory.OST_StructuralFoundation, 
+                                                                selected_viewport.ViewId)
+# generate mark mapping for all dwall. 
+valid_dwalls = {}
+for visible_dwall in dwalls_in_view:
+    param = visible_dwall.get_Parameter(BuiltInParameter.ALL_MODEL_MARK).AsString()
+    if param is not None:
+        try:
+            valid_dwalls[param] = visible_dwall
+        except:
+            pass
+
+# filter dwall based on user selection
+mark_selection_res = forms.SelectFromList.show(sorted(valid_dwalls.keys()), multiselect=True, button_name = "Select panels")
+selected_dwall = {}
+for key in mark_selection_res:
+    if key in valid_dwalls:
+        selected_dwall[key] = valid_dwalls[key]
+
+# add length and panel type values to dwall selection
+selected_dwall_info = {}
+for key, dwall in selected_dwall.items():
+    length_param = dwall.get_Parameter(BuiltInParameter.STRUCTURAL_FOUNDATION_LENGTH) # type: Parameter
+    panel_type_param = dwall.LookupParameter("ACM_DWALL_Panel Type") # type: Parameter
+    
+    length_value = None
+    panel_type_value = None
+
+    if length_param is not None:
+        length_value = _UnitHandler.convert_internal_to_millimeter(length_param.AsDouble())
+    if panel_type_param is not None:
+        panel_type_value = panel_type_param.AsString()
+    selected_dwall_info[key] = [dwall, length_value, panel_type_value]
+
+# prompt detail line as reference point
+selected_detail_line = _Selections.pick_single_element(doc, uidoc) # type: DetailLine
+original_point = _Selections.get_endpoint_as_xyz(selected_detail_line)
+
+# place elevation header family
+eh_family_collector = _Collectors.get_family_by_names(doc ,[ELEVATION_HEADER_200_FAMNAME]) # type: Family
+if len(eh_family_collector) == 1:
+    eh_family = eh_family_collector[0]
+
+print(eh_family)
+print(eh_family.GetTypeId())
+print(eh_family.GetValidTypes()[0])
+# print(type(eh_symbol))
