@@ -7,6 +7,7 @@ from Autodesk.Revit.DB import *
 from Autodesk.Revit.UI.Selection import *
 from pyrevit import revit, forms
 from RvtCore import _Collectors, _Selections, _UnitHandler
+# from typing import List, Tuple
 
 # ╔═╗╔═╗╔╗╔╔═╗╔╦╗╔═╗╔╗╔╔╦╗╔═╗
 # ║  ║ ║║║║╚═╗ ║ ╠═╣║║║ ║ ╚═╗
@@ -88,12 +89,73 @@ for key, dwall in selected_dwall.items():
 selected_detail_line = _Selections.pick_single_element(doc, uidoc) # type: DetailLine
 original_point = _Selections.get_endpoint_as_xyz(selected_detail_line)
 
-# place elevation header family
-eh_family_collector = _Collectors.get_family_by_names(doc ,[ELEVATION_HEADER_200_FAMNAME]) # type: Family
-if len(eh_family_collector) == 1:
-    eh_family = eh_family_collector[0]
+# get elevation header family symbol
+eh_symbol = None
+eh_family_collector = _Collectors.get_family_by_names(doc ,[ELEVATION_HEADER_200_FAMNAME]) # type: List[Family]
+for family in eh_family_collector:
+    symbol_ids = family.GetFamilySymbolIds()
+    for id in symbol_ids:
+        symbol = doc.GetElement(id)
+        symbol_name = Element.Name.__get__(symbol)
+        if symbol_name == SH1:
+            eh_symbol = symbol
 
-print(eh_family)
-print(eh_family.GetTypeId())
-print(eh_family.GetValidTypes()[0])
-# print(type(eh_symbol))
+# get elevation information family symbol
+ei_symbol = None
+ei_family_collector = _Collectors.get_family_by_names(doc, [ELEVATION_INFORMATION_200_FAMNAME])
+for family in ei_family_collector:
+    symbol_ids = family.GetFamilySymbolIds()
+    for id in symbol_ids:
+        symbol = doc.GetElement(id)
+        symbol_name = Element.Name.__get__(symbol)
+        if symbol_name == SH1:
+            ei_symbol = symbol
+
+# get schedule header family symbol
+sh_symbol = None
+sh_family_collector = _Collectors.get_family_by_names(doc, [SCHEDULE_HEADER_200_FAMNAME])
+for family in sh_family_collector:
+    symbol_ids = family.GetFamilySymbolIds()
+    for id in symbol_ids:
+        symbol = doc.GetElement(id)
+        symbol_name = Element.Name.__get__(symbol)
+        if symbol_name == SH1:
+            sh_symbol = symbol
+
+# generate parameters for schedule header family placement
+panel_marks = []
+panel_lengths = []
+panel_types = []
+
+for i in sorted(selected_dwall_info.keys()):
+    panel_marks.append(i)
+    panel_lengths.append(selected_dwall_info[i][1])
+    panel_types.append(selected_dwall_info[i][2])
+
+X_distance = 0
+sh_points = []
+for m, length in zip(range(len(panel_marks)), panel_lengths):
+    if m == 0:
+        sh_X = original_point.X
+    else:
+        X_distance = X_distance + _UnitHandler.convert_millimeter_to_internal(panel_lengths[m-1]/200)
+        sh_X = original_point.X + X_distance
+    sh_point = XYZ(sh_X, original_point.Y, original_point.Z)
+    sh_points.append(sh_point)
+
+# place annotation families
+with Transaction(doc, __title__) as t:
+    t.Start()
+    try:
+        for mark, length, typ, point in zip(panel_marks, panel_lengths, panel_types, sh_points):
+            new_sh_fam_instance = doc.Create.NewFamilyInstance(point, sh_symbol, doc.ActiveView) # type: Element
+            new_sh_fam_instance.LookupParameter("Dwall Mark").Set(mark)        
+            new_sh_fam_instance.LookupParameter("Dwall Coupler Type").Set(typ)
+            new_sh_fam_instance.LookupParameter("Dwall Length").Set(_UnitHandler.convert_millimeter_to_internal(length))
+        new_eh_fam_instance = doc.Create.NewFamilyInstance(original_point, eh_symbol, doc.ActiveView)
+        new_ei_fam_instance = doc.Create.NewFamilyInstance(original_point, ei_symbol, doc.ActiveView) # type: Element
+        new_ei_fam_instance.LookupParameter("Column Width").Set(_UnitHandler.convert_millimeter_to_internal(sum(panel_lengths)/200))
+        t.Commit()
+    except:
+        print("Error placing EH family")
+        t.RollBack()
