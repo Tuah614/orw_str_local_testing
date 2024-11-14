@@ -8,16 +8,17 @@ from collections import OrderedDict
 from pathlib import Path
 import json
 import os
+from RvtCore import _Collections
 
 # ╔═╗╦ ╦╔╗╔╔═╗╔╦╗╦╔═╗╔╗╔╔═╗
 # ╠╣ ║ ║║║║║   ║ ║║ ║║║║╚═╗
 # ╚  ╚═╝╝╚╝╚═╝ ╩ ╩╚═╝╝╚╝╚═╝ FUNCTIONS
 # ==================================================
 
-def sort_panel_types(p_type):
-    alpha = p_type
-    numeric = int(p_type[1:])
-    return (alpha, numeric)
+# def sort_panel_types(p_type):
+#     alpha = p_type
+#     numeric = int(p_type[1:])
+#     return (alpha, numeric)
 
 def get_appdata_dir():
     dir = os.getenv('APPDATA')
@@ -92,7 +93,7 @@ layer_values = []
 for level, prop in panel_data_as_list[0].items():
     level_names.append(level)
     layers_per_level.append(prop['Number of layers'])
-typ = sorted(schema_data_standard.keys(), key=sort_panel_types)
+typ = sorted(schema_data_standard.keys(), key=_Collections.sort_panel_types_alphanumeric)
 
 max_length = max(len(level_name) for level_name in level_names)
 

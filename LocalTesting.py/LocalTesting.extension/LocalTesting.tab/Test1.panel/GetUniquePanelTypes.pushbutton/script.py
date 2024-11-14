@@ -5,7 +5,7 @@ __helpurl__ = "https://teams.microsoft.com/l/chat/0/0?users=tuah.hamid@aecom.com
 
 from Autodesk.Revit.DB import *
 from Autodesk.Revit.UI.Selection import *
-import clr
+from RvtCore import _Collections
 
 # ╦  ╦╔═╗╦═╗╦╔═╗╔╗ ╦  ╔═╗╔═╗
 # ╚╗╔╝╠═╣╠╦╝║╠═╣╠╩╗║  ║╣ ╚═╗
@@ -16,27 +16,6 @@ doc = __revit__.ActiveUIDocument.Document #type: Document
 uidoc = __revit__.ActiveUIDocument #type: UIDocument 
 app = __revit__.Application #type: Application
 selection = uidoc.Selection #type: Selection
-
-# ╔═╗╦ ╦╔╗╔╔═╗╔╦╗╦╔═╗╔╗╔╔═╗
-# ╠╣ ║ ║║║║║   ║ ║║ ║║║║╚═╗
-# ╚  ╚═╝╝╚╝╚═╝ ╩ ╩╚═╝╝╚╝╚═╝ FUNCTIONS
-# ==================================================
-
-def sort_panel_types(p_type):
-    if len(p_type) == 1:
-        alpha = p_type[0]
-        numeric1 = p_type[0]
-        numeric2 = p_type[0]
-    else:
-        if p_type[0].isalpha():
-            alpha = p_type[0]
-            numeric1 = int(p_type[1])
-            numeric2 = None
-        else:
-            alpha = p_type[0]
-            numeric1 = int(p_type[0])
-            numeric2 = p_type[0]
-    return(alpha, numeric1, numeric2)
 
 # ╔╦╗╔═╗╦╔╗╔
 # ║║║╠═╣║║║║
@@ -55,7 +34,7 @@ for ele in str_found_collector:
     if param_value is not None:
         panel_set.add(param_value)
 
-sorted_by_numeric = sorted(panel_set, key=sort_panel_types)
+sorted_by_numeric = sorted(panel_set, key=_Collections.sort_panel_types_alphanumeric)
 
 for t in sorted_by_numeric:
     print(t)
