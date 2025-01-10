@@ -37,21 +37,3 @@ for level in level_names:
         allow_offset_values.append(1)
 
 print(allow_offset_values)
-
-panel_data_as_list = schema_data_ordered.values()
-panel_data_counts = []
-for panel in panel_data_as_list:
-    panel_data_counts.append(len(panel))
-
-panel_unique_counts_set = list(set(panel_data_counts))
-panel_unique_count = len(panel_unique_counts_set)
-
-LEVELCOUNT = panel_unique_counts_set[0]
-
-allow_header_bool_values = []
-for i in range(LEVELCOUNT):
-    if i == 0:
-        allow_header_bool_values.append(1)
-    else:
-        allow_header_bool_values.append(0)
-print(allow_header_bool_values)

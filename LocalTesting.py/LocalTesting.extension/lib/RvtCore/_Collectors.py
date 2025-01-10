@@ -72,3 +72,22 @@ def get_family_by_names(doc, family_names): # type: (Document, List[str]) -> Lis
         if family.Name in family_names:
             valid_family.append(family)
     return valid_family
+
+def get_elements_by_category(doc, cat): # type: (Document, BuiltInCategory) -> List[Elements]
+    '''Get elements given a built in category'''
+    collector = FilteredElementCollector(doc)\
+                .OfCategory(cat).\
+                WhereElementIsNotElementType().\
+                ToElements()
+    return collector
+
+def get_elements_by_categories (doc, cats): # type: (Document, List[BuiltInCategory]) -> List[Elements]
+    '''Get elements given a list of built in categories'''
+    elements_list = []
+    for cat in cats:
+        elements = FilteredElementCollector(doc).\
+                    OfCategory(cat).\
+                    WhereElementIsNotElementType().\
+                    ToElements()
+        elements_list.append(elements)
+    return elements_list
