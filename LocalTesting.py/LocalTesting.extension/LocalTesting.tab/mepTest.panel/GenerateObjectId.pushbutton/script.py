@@ -49,12 +49,15 @@ for p in pipes:
 binding_map_iterator = doc.ParameterBindings.ForwardIterator()
 binding_map_iterator.Reset()
 
-parameters = [] #type : Definition
+parameters = [] 
 
 
 while binding_map_iterator.MoveNext():
     parameters.append(binding_map_iterator.Key)
 
-for param in parameters:
-    print(param.GetDataType().TypeId)
+for param in sorted(parameters):
+    print(param.GetDataType().TypeId) #forgetypeid identified as TypeId
+    print(param.GetDataType.ToString())
+    print(param.GetTypeId().TypeId) #
+    print(param.GetTypeId().ToString())
     print(param.Name)

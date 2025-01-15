@@ -2,8 +2,7 @@
 
 # imports
 import re
-from Autodesk.Revit.DB import Document, BindingMap, DefinitionBindingMapIterator
-
+from Autodesk.Revit.DB import *
 # ╔╦╗╔═╗╦╔╗╔
 # ║║║╠═╣║║║║
 # ╩ ╩╩ ╩╩╝╚╝
@@ -19,7 +18,40 @@ def sort_panel_types_alphanumeric(p_type):
         return (alpha.isdigit(), alpha, int(numeric))
     return (p_type,)
 
-def find_duplicate_parameters(doc): # type: (Document) -> (set[str], bool)
+def find_duplicate_parameters(doc): # type: (Document) -> (Dict, bool)
+    '''
+    Find duplicate shared parameters in the current project
+    Return bool state of the operation and parameters in dictionary
+    '''
+    parameters_by_key = {}
+    existing_parameter_bindings = doc.ParameterBindings
+    param_bindings_iterator = existing_parameter_bindings.ForwardIterator()
+    param_bindings_iterator.Reset()
+    while param_bindings_iterator.MoveNext():
+        current = doc.GetElement(param_bindings_iterator.Key.Id)
+        if isinstance(current, SharedParameterElement):
+            param_name = current.Name
+            if param_name not in parameters_by_key:
+                parameters_by_key[param_name] = []
+            parameters_by_key[param_name].append(current)
+
+    invalid_param_names = [] # invalid is for no duplicates
+    for key, values in parameters_by_key.items():
+        if len(values) <= 1:
+            invalid_param_names.append(key)
+    
+    # remove invalid param from dictionary
+    for name in invalid_param_names:
+        del parameters_by_key[name]
+
+    # bool flag for duplicate status
+    has_duplicates = False
+    if len(invalid_param_names) > 0:
+        has_duplicates = True
+
+    return has_duplicates, parameters_by_key
+
+def find_duplicate_parameter_names(doc): # type: (Document) -> (set(str), bool)
     '''
     Find duplicate parameters by accessing definition names
     '''
