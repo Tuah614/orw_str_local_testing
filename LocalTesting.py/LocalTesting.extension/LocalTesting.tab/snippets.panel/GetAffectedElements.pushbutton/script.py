@@ -50,41 +50,33 @@ for name, param in selected_param.items():
 # get all project parameters in the current project
 
 has_duplicates, dict_duplicates = _Collections.find_duplicate_parameters(doc) # 
-# existing_param_bindings = doc.ParameterBindings
-# bindings_iterator = existing_param_bindings.ForwardIterator()
-# bindings_iterator.Reset()
-# while bindings_iterator.MoveNext():
-#     current = doc.GetElement(bindings_iterator.Key.Id)
-#     if isinstance(current, SharedParameterElement):
-#         param_name = current.Name
-#         if param_name not in dict_duplicates:
-#             dict_duplicates[param_name] = []
-#         dict_duplicates[param_name].append(current)
 
-print(has_duplicates)  
+if has_duplicates:
+    print("Current project contains duplicating parameters ⚠️ \n \
+          Please continue with checking elements and families")
+else:
+    forms.alert(
+        "Schuperb model. No duplicated parameters found 🚀",
+        exitscript=True
+    )
 
 for key, values in dict_duplicates.items():
-    print("NAME: {}".format(key))
-    for v in values:
-        print("GUID: {}".format(v.GuidValue))
-    print("\n ")
-
-'''This is for parameter binding checking only'''
-for key, values in dict_duplicates.items():
-    if len(values) > 1:
-        print("Parameter Key Name -- {0}".format(key))
-        for v in values:
-            print("GUIDS - {0} --- {1}".format(v.GuidValue, key))
-        print("\n ")
-
+    print("PARAM NAME: {}".format(key))
+    for val in values:
+        print("GUID {}".format(val.GuidValue))
 '''check parameter duplicates in family instances and curve driven elements'''
+
+
 # get all family instance
 all_family_instances = FilteredElementCollector(doc).\
                         OfClass(FamilyInstance).\
                         WhereElementIsNotElementType().\
                         ToElements()
-print(len(all_family_instances))
+unique_cats_instance = set()
+for ele in all_family_instances:
+    unique_cats_instance.add(ele.Category.Name)
 
+'''Test for a singular instance element'''
 sample_instance1 = all_family_instances[1000]
 family_symbol = sample_instance1.Symbol
 symbol_name = Element.Name.__get__(family_symbol)
@@ -100,6 +92,17 @@ while instance_parameter_iterator.MoveNext():
         param_guid = current.GUID
 
         print("Name: {0} -- GUID: {1}".format(param_name, param_guid))
+
+for ele in all_family_instances:
+    param_iterator = ele.Parameters.ForwardIterator()
+    instance_parameter_iterator.Reset()
+    while instance_parameter_iterator.MoveNext():
+        current = instance_parameter_iterator.Current
+        if current.IsShared:
+            symbol_name = Element.Name.__get__(ele.Symbol)
+            family_name = symbol_name.FamilyName
+            category_name = ele.Category.Name
+
 
     
 
@@ -120,3 +123,7 @@ print(len(all_other_instances))
 unique_cats_other = set()
 for ele in all_other_instances:
     unique_cats_other.add(ele.Category.Name)
+
+
+print(unique_cats_instance)
+print(unique_cats_other)
