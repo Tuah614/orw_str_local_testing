@@ -33,7 +33,7 @@ PROJECT_UNITS = "mm."
 TRADE_DISCIPLINE_PARAM = "ACM - Trade Discipline / Service Type" # sample value: SE - Strucutral
 
 # FROM PROJECT INFORMATION CAT
-DISCIPLINE_CODE_PARAM = "ACM - Discipline Code" # sample value: D, P
+DISCIPLINE_CODE_PARAM = "ACM - Discipline Code" # sample value: SE
 LOCATION_CODE_PARAM = "ACM - Location Code" # sample value: OR06, OR07
 
 # SHEET REVISIONS INFORMATIONS
@@ -56,7 +56,7 @@ REV_7_DATE_PARAM = "ACM - Rev.7 Date"
 REV_1_DESC_PARAM = "ACM - Rev.1 Description"
 REV_2_DESC_PARAM = "ACM - Rev.2 Description"
 REV_3_DESC_PARAM = "ACM - Rev.3 Description"
-REV_4_ESC_PARAM = "ACM - Rev.4 Description"
+REV_4_DESC_PARAM = "ACM - Rev.4 Description"
 REV_5_DESC_PARAM = "ACM - Rev.5 Description"
 REV_6_DESC_PARAM = "ACM - Rev.6 Description"
 REV_7_DESC_PARAM = "ACM - Rev.7 Description"
@@ -177,7 +177,8 @@ for key in sheet_res:
 # group sheets by drawing series
 # for example, dict[1000_DWALL] = [sheet_objects]
 sheet_group = {}
-for key, sheet in selected_sheets.items():
+for key, sheet in (selected_sheets.items()):
+    # get core informations
     drawing_type = get_param_value(sheet, DRAWING_TYPE_PARAM)
     drawing_location = get_param_value(sheet, DRAWING_LOCATION_PARAM)
     sheet_name = sheet.Name
@@ -187,48 +188,128 @@ for key, sheet in selected_sheets.items():
     sheet_number = sheet.SheetNumber
     a1_scale = get_param_value(sheet, A1_SCALE_PARAM)
     a3_scale = get_param_value(sheet, A3_SCALE_PARAM)
+    sheet_issue_date = sheet.get_Parameter(BuiltInParameter.SHEET_ISSUE_DATE).AsString()
+    designed_by = sheet.get_Parameter(BuiltInParameter.SHEET_DESIGNED_BY).AsString()
+    checked_by = sheet.get_Parameter(BuiltInParameter.SHEET_CHECKED_BY).AsString()
+    approved_by = sheet.get_Parameter(BuiltInParameter.SHEET_APPROVED_BY).AsString()
+
+    # get past revisions
+    
+    
+    # generate dwg name string
+    dwg_string = "{}-1-{}-{}-{}-001-{}".format(sheet_status, 
+                                               PROJECT_DISCIPLINE_CODE, 
+                                               PROJECT_LOCATION_CODE, 
+                                               sheet_number, 
+                                               current_revision)
+
+    # generate drawing no
+    dwg_number = "1-{}-{}-{}-001".format(PROJECT_DISCIPLINE_CODE, 
+                                        PROJECT_LOCATION_CODE, 
+                                        sheet_number)
 
     if drawing_type not in sheet_group:
         sheet_group[drawing_type] = {}
-    sheet_group[drawing_type][key] = (drawing_location, 
-                                        sheet_name, 
-                                        drawing_title_2,  
-                                        sheet_status, 
-                                        current_revision,
-                                        sheet_number,
-                                        a1_scale,
-                                        a3_scale)
+        index = 1 # reset for every new series
 
-for key, val in sheet_group.items():
-    print("{} - {}".format(key, val))
-
-# get Sheet Number, Current Revision from Sheets
-sheet_numbers = [] 
-current_revisions = []
-
-# # generate rows NO. data
-# sheet_counts = len(sheets_by_type)
-# row_counts = list(range(1, sheet_counts + 1)) + (series_type_count * 2) # reserve two rows for each header
-
-# for sheet in sheets_by_type:
-#     rev_element = doc.GetElement(sheet.GetCurrentRevision()) # type: Revision
-#     current_revisions.append(rev_element)
-#     try:
-#         print(rev_element.RevisionNumber)
-#     except:
-#         print("NOT FOUND: {}  Type: {} Sheet: {}".format(Element.Name.__get__(rev_element), type(rev_element), sheet.Name))
-        
+    sheet_group[drawing_type][key] = (index,
+                                      dwg_string,
+                                      dwg_number,
+                                      drawing_location, 
+                                      sheet_name, 
+                                      drawing_title_2,  
+                                      sheet_status, 
+                                      sheet_number,
+                                      a1_scale,
+                                      a3_scale,
+                                      sheet_issue_date,
+                                      designed_by,
+                                      checked_by,
+                                      current_revision,
+                                      approved_by)
+    
+    index += 1 
     
 
+# statement for checking
+# for key, val in sorted(sheet_group.items()):
+#     print("{} - {}".format(key, val))
 
-# drawing number is a label with suffix and prefix of parameter values
-# sample as follows
-# 1-SE-0R07-1461-001-A
-# {WBS CODE}-{WBS SYSTEM CODE}-{ACM - Discipline Code}-{ACM - Location Code}-{Sheet Number}-{SHEETNUMBER}-{Current Revision}
-# SHEETNUMBER IS ALWAYS 001, based on BEP
+#hardcoded headers for now
+headers = [
+    "Drawing Location", "Sheet Name", "Drawing Title 2", "Status", "Sheet Number",
+    "A1 Scale", "A3 Scale", "Issue Date", "Designed By", "Checked By", "Current Revision", "Approved By"
+]
 
+# prepare data in the form of list to write in excel
+data = []
+for drawing_type, sheets in sorted(sheet_group.items()):
+    print(drawing_type)
+    data.append([drawing_type]) 
+    for key, values in sheets.items():
+        print(key)
+        print(list(values))
+        data.append(list(values))
+    data.append([])
+    
+# double check to remove empty list at the end of data set
+if data[-1] == []:
+    data.pop()
 
+print("\n \n")
+for d in data:
+    print(d)
+print("\n\n")
+# ╦ ╦╦═╗╦╔╦╗╔═╗  ╔╦╗╔═╗  ╔═╗═╗ ╦╔═╗╔═╗╦  
+# ║║║╠╦╝║ ║ ║╣    ║ ║ ║  ║╣ ╔╩╦╝║  ║╣ ║  
+# ╚╩╝╩╚═╩ ╩ ╚═╝   ╩ ╚═╝  ╚═╝╩ ╚═╚═╝╚═╝╩═╝
 
-# prompt user to select Excel file to dump data
-# excel_path = forms.pick_excel_file()
+# import System
+# import time
+# from System import Array
+# from System.Collections.Generic import *
 
+# t= System.Type.GetTypeFromProgID("Excel.Application")
+# excel = System.Activator.CreateInstance(t)
+
+# excelTypeLibGuid = System.Guid("00020813-0000-0000-C000-000000000046")
+# clr.AddReferenceToTypeLibrary(excelTypeLibGuid)
+# from Excel import Application
+# from Excel import *
+# excel = Application()
+
+# clr.AddReferenceByName('Microsoft.Office.Interop.Excel,Version=11.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c' )
+# from Microsoft.Office.Interop import Excel
+# from Microsoft.Office.Interop.Excel import ApplicationClass
+# from System.Runtime.InteropServices import Marshal
+
+# xlDirecDown = System.Enum.Parse(Excel.XlDirection, "xlDown")
+# xlDirecRight = System.Enum.Parse(Excel.XlDirection, "xlToRight")
+
+# prompt file path
+# excel_file_path = forms.pick_excel_file(False, "Excel file")
+# if excel_file_path:
+#     try:
+#         wb = excel.Workbooks.Open(excel_file_path)
+#         worksheets = wb.Worksheets
+#         exists = False
+
+#         sheets = {}
+#         for s in worksheets:
+#             sheets[s.Name] = s
+
+#         singular_sheet_res = forms.SelectFromList.show(sorted(sheets.keys()), 
+#                                                        title="Select a sheet", 
+#                                                        button_name="Select",
+#                                                        width= 450,
+#                                                        height=450)
+        
+#         if singular_sheet_res:
+#             ws = wb.Sheets[singular_sheet_res]
+
+#     except:
+#         print("Something went wrong")
+#         pass
+#     finally:
+#         workbook.Close()
+#         excel.Quit()
