@@ -99,17 +99,18 @@ if excel_file_path:
         if singular_sheet:
             worksheet = workbook.Sheets[singular_sheet]
 
-        #dummy values
-        for col_idx, header in enumerate(headers, start=1):
-            worksheet.Cells[1, col_idx].Value2 = header
+        # write header values
+        # for col_idx, header in enumerate(headers, start=1):
+        #     worksheet.Cells[1, col_idx].Value2 = header
         
-        for row_idx, data_row in enumerate(data2, start=2):
+        # write row values
+        for row_idx, data_row in enumerate(data2, start=3):
             for col_idx, value in enumerate(data_row, start=1):
                 worksheet.Cells[row_idx, col_idx].Value2 = value
 
         # format 
-        header_range = worksheet.Range["A1:C1"]
-        header_range.Font.FontStyle = "Bold"
+        # header_range = worksheet.Range["A1:C1"]
+        # header_range.Font.FontStyle = "Bold"
         print("Succesfully written data")
     except:
         pass
